@@ -11,8 +11,20 @@ body {
     background-position: center 20%;
     background-attachment: fixed;
     color: #333;
+    height: 100vh;
     overflow: hidden;
   }
+
+#view-recetas {
+  overflow: hidden;
+}
+
+#view-semana,
+#view-compra,
+#view-ajustes {
+  overflow-y: auto;
+  max-height: calc(100vh - 50px);
+}
 
 /* ── Header ── */
 header {
@@ -34,15 +46,15 @@ header .tagline {
 }
 
 /* ── Hero Banner ── */
-  .hero {
-    background-position: top;
-      position: sticky;
-      top: 0;
+.hero {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
   z-index: 10;
-    border-radius: 16px;
-    margin-bottom: 24px;
-    padding: 5px 24px 30px 24px;
-  }
+  padding: 20px 24px 24px 24px;
+  text-align: center;
+}
 
   .hero-content {
     text-align: center;
@@ -80,11 +92,13 @@ nav {
 }
 nav button {
   padding: 13px 18px;
+  background: rgba(255, 255, 255, 0.7);
   border: none;
-  background: none;
+  border-radius: 8px;
+  outline: none;
   cursor: pointer;
   font-size: 0.9rem;
-  color: #777;
+  color: #0b0b0b;
   border-bottom: 3px solid transparent;
   margin-bottom: -2px;
   transition: all 0.2s;
@@ -94,7 +108,7 @@ nav button {
   gap: 6px;
 }
 nav button.active {
-  color: #427727;
+  color: #0e0e0e;
   border-bottom-color: #427727;
 }
 nav button:hover:not(.active) {
@@ -112,7 +126,7 @@ nav button:hover:not(.active) {
 
 /* ── Layout ── */
 main {
-  padding: 24px;
+  padding: 20px 24px 24px 24px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -205,10 +219,14 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 18px;
-   max-height: 80vh;
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
   padding-right: 8px;
+  margin-top: 250px;
+  
+  
 }
+
 
 .recipe-card {
   background: white;
