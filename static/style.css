@@ -11,6 +11,7 @@ body {
     background-position: center 20%;
     background-attachment: fixed;
     color: #333;
+    overflow: hidden;
   }
 
 /* ── Header ── */
@@ -40,11 +41,12 @@ header .tagline {
   z-index: 10;
     border-radius: 16px;
     margin-bottom: 24px;
-    padding: 80px 24px;
+    padding: 5px 24px 30px 24px;
   }
 
   .hero-content {
     text-align: center;
+
   }
 
   .hero-content h2 {
@@ -58,7 +60,7 @@ header .tagline {
   .hero-content input {
     width: 100%;
     max-width: 500px;
-    padding: 14px 20px;
+    padding: 14px 10px;
     border-radius: 30px;
     border: none;
     font-size: 1rem;
