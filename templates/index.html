@@ -28,13 +28,16 @@
         <div class="hero">
           <div class="hero-content">
             <h2>¡Adios Fresco!</h2>
-            <input
-              type="text"
-              id="recipe-search"
-              placeholder="🔍 Buscar por nombre o ingrediente..."
-              oninput="renderGrid()"
-              autocomplete="off"
-            />
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                id="recipe-search"
+                placeholder="Buscar por nombre o ingrediente..."
+                oninput="renderGrid()"
+                autocomplete="off"
+              />
+            </div>
           </div>
         </div>
         <div class="recipe-grid" id="recipe-grid"></div>
