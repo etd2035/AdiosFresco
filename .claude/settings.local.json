@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(python:*)",
+      "Bash(py -3 -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(py:*)",
+      "Bash(powershell -command \"Get-Process python | Select-Object Id,Path; \\(Get-Process -Id \\(Get-Process python | Select-Object -First 1 -ExpandProperty Id\\)\\).StartInfo\")",
+      "Bash(powershell -command \"\\(Get-WmiObject Win32_Process -Filter 'name=\\\\\"python.exe\\\\\"'\\) | Select-Object ProcessId, CommandLine, @{Name='WorkingDir';Expression={$_.GetOwnerSid\\(\\)}}\")",
+      "Bash(powershell -command \"Get-WmiObject Win32_Process -Filter 'name=\\\\\"python.exe\\\\\"' | Select-Object ProcessId, CommandLine | Format-List\")",
+      "Bash(taskkill /PID 7328 /F)",
+      "Bash(taskkill /PID 7720 /F)",
+      "Bash(powershell -command \"Stop-Process -Id 7328 -Force; Stop-Process -Id 7720 -Force\")"
+    ]
+  }
+}

@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adios Fresco</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text
+  y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>"
+    />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    
+
+    <nav>
+      <button class="active" onclick="showView('recetas')">📖 Recetas</button>
+      <button onclick="showView('semana')">
+        📅 Semana
+        <span class="badge" id="week-badge" style="display: none">0</span>
+      </button>
+      <button onclick="showView('compra')">🛒 Compra</button>
+      <button onclick="showView('ajustes')">⚙️ Ajustes</button>
+    </nav>
+
+    <main>
+      <!-- ════ RECETAS ════ -->
+      <div id="view-recetas" class="view active">
+        <div class="hero">
+          <div class="hero-content">
+            <h2>¡Adios Fresco!<br>Ya no te necesitamos</h2>
+            <input
+              type="text"
+              id="recipe-search"
+              placeholder="🔍 Buscar por nombre o ingrediente..."
+              oninput="renderGrid()"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+        <div class="recipe-grid" id="recipe-grid"></div>
+      </div>
+
+      <!-- ════ SEMANA ════ -->
+      <div id="view-semana" class="view">
+        <div class="persons-row">
+          <label>👥 Personas:</label>
+          <select id="persons-select" onchange="updatePersons()">
+            <option value="2">2 personas</option>
+            <option value="4">4 personas</option>
+            <option value="6">6 personas</option>
+          </select>
+          <span class="hint"
+            >Las cantidades de la lista se ajustan automáticamente</span
+          >
+        </div>
+        <div class="page-header" style="margin-bottom: 14px">
+          <h2>Recetas de esta semana</h2>
+        </div>
+        <div id="week-list" class="selected-list"></div>
+        <button
+          class="btn btn-green btn-full btn-lg"
+          id="gen-btn"
+          onclick="generateList()"
+          style="display: none"
+        >
+          🛒 Generar lista de la compra
+        </button>
+      </div>
+
+      <!-- ════ COMPRA ════ -->
+      <div id="view-compra" class="view">
+        <div class="shopping-toolbar">
+          <h2>Lista de la compra</h2>
+          <div class="shopping-actions">
+            <button class="btn btn-grey" onclick="uncheckAll()">
+              ↺ Desmarcar todo
+            </button>
+            <button
+              class="btn btn-green"
+              onclick="openFinalList()"
+              id="final-list-btn"
+              style="display: none"
+            >
+              📋 Lista final
+            </button>
+            <button class="btn btn-grey" onclick="openMercadona()">
+              🛍️ Ir a Mercadona
+            </button>
+          </div>
+        </div>
+        <div id="shop-content">
+          <div class="empty-state">
+            <div class="big-emoji">🛒</div>
+            <p>
+              Selecciona recetas en la pestaña "Semana"<br />y pulsa "Generar
+              lista de la compra"
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ AJUSTES ════ -->
+      <div id="view-ajustes" class="view">
+        <div class="page-header">
+          <h2>Ingredientes de despensa</h2>
+          <p>
+            Estos ingredientes se excluyen automáticamente de la lista de la
+            compra porque los tenéis siempre en casa
+          </p>
+        </div>
+        <div class="pantry-intro">
+          🏠 Los ingredientes listados aquí <strong>no aparecerán</strong> en la
+          lista de la compra. Añade o elimina según lo que siempre tengáis en
+          casa.
+        </div>
+        <div class="pantry-add-row">
+          <input
+            type="text"
+            id="pantry-input"
+            placeholder="Ej: Mantequilla"
+            onkeydown="pantryKey(event)"
+          />
+          <button class="btn btn-green" onclick="addPantry()">+ Añadir</button>
+        </div>
+        <div class="pantry-list" id="pantry-list">
+          <div
+            style="
+              color: #bbb;
+              font-size: 0.9rem;
+              text-align: center;
+              padding: 20px;
+            "
+          >
+            Cargando...
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ════ MODAL ════ -->
+    <div class="overlay" id="overlay" onclick="overlayClick(event)">
+      <div class="modal">
+        <div class="modal-hero" id="modal-hero">
+          <button class="close-btn" onclick="closeModal()">✕</button>
+          <div class="hero-overlay">
+            <h2 id="m-title"></h2>
+            <div class="m-sub" id="m-sub"></div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="m-section" id="m-meta"></div>
+          <div class="m-section">
+            <h3>🧾 Ingredientes (2 personas)</h3>
+            <div class="ing-table" id="m-ingredients"></div>
+          </div>
+          <div class="m-section">
+            <h3>🏠 De tu despensa</h3>
+            <p
+              id="m-pantry"
+              style="font-size: 0.87rem; color: #777; line-height: 1.5"
+            ></p>
+          </div>
+          <div class="m-section">
+            <h3>👩‍🍳 Preparación</h3>
+            <div class="steps-list" id="m-steps"></div>
+          </div>
+          <div class="m-section">
+            <h3>🔧 Utensilios</h3>
+            <p
+              id="m-tools"
+              style="font-size: 0.87rem; color: #777; line-height: 1.5"
+            ></p>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-grey" onclick="closeModal()">Cerrar</button>
+          <button
+            class="btn"
+            id="m-add-btn"
+            onclick="modalToggleWeek()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ FINAL LIST MODAL ════ -->
+    <div
+      class="final-overlay"
+      id="final-overlay"
+      onclick="finalOverlayClick(event)"
+    >
+      <div class="final-modal">
+        <div class="final-modal-head">
+          <h3>📋 Lista final de la compra</h3>
+          <button onclick="closeFinalList()">✕</button>
+        </div>
+        <div class="final-modal-body">
+          <textarea id="final-list-text" readonly></textarea>
+        </div>
+        <div class="final-modal-foot">
+          <button class="btn btn-grey" onclick="closeFinalList()">
+            Cerrar
+          </button>
+          <button class="btn btn-green" onclick="copyListText()">
+            📋 Copiar al portapapeles
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      // ── State ──
+      let recipes = [];
+      let selected = new Set(
+        JSON.parse(localStorage.getItem("hf_selected") || "[]"),
+      );
+      let persons = parseInt(localStorage.getItem("hf_persons") || "2");
+      let shoppingSections = [];
+      let currentRecipe = null;
+
+      // ── Boot ──
+      fetch("/api/recipes")
+        .then((r) => r.json())
+        .then((data) => {
+          recipes = data;
+          renderGrid();
+          updateBadge();
+          document.getElementById("persons-select").value = persons;
+        });
+
+      // ── Views ──
+      const viewOrder = { recetas: 0, semana: 1, compra: 2, ajustes: 3 };
+      function showView(name) {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document
+          .querySelectorAll("nav button")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("view-" + name).classList.add("active");
+        document
+          .querySelectorAll("nav button")
+          [viewOrder[name]].classList.add("active");
+        if (name === "semana") renderWeek();
+        if (name === "compra" && shoppingSections.length) renderShopping();
+        if (name === "ajustes") loadPantry();
+      }
+
+      // ── Tag colours ──
+      function tagClass(t) {
+        const m = {
+          Vegetariano: "tag-green",
+          Exprés: "tag-orange",
+          Rápido: "tag-orange",
+          Familia: "tag-blue",
+          Picante: "tag-red",
+          "Picante opcional": "tag-red",
+          "Cocíname primero": "tag-red",
+          "Una olla": "tag-blue",
+        };
+        return m[t] || "tag-blue";
+      }
+
+      // ── Recipe photo helper ──
+      function photoEl(recipeId, cssClass, clickId) {
+        const src = `/static/images/${recipeId}.jpg`;
+        const onclick = clickId ? `onclick="openModal('${clickId}')"` : "";
+        return `<img src="${src}" alt="" class="${cssClass}" ${onclick}
+    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="${cssClass.replace("card-photo", "card-photo-placeholder").replace("item-photo", "item-photo-placeholder")}"
+         style="display:none" ${onclick}>
+      ${recipes.find((r) => r.id === recipeId)?.emoji || "🍽️"}
+    </div>`;
+      }
+
+      // ── Recipe Grid ──
+      function renderGrid() {
+        const q = (document.getElementById("recipe-search")?.value || "")
+          .toLowerCase()
+          .trim();
+        const filtered = q
+          ? recipes.filter(
+              (r) =>
+                r.nombre.toLowerCase().includes(q) ||
+                r.subtitulo.toLowerCase().includes(q) ||
+                r.ingredientes.some((i) => i.nombre.toLowerCase().includes(q)),
+            )
+          : recipes;
+
+        const noResults =
+          q && filtered.length === 0
+            ? `<div class="empty-state"><div class="big-emoji">🔍</div><p>No hay recetas con "${q}".</p></div>`
+            : "";
+
+        document.getElementById("recipe-grid").innerHTML =
+          noResults ||
+          filtered
+            .map(
+              (r) => `
+    <div class="recipe-card ${selected.has(r.id) ? "selected" : ""}" id="card-${r.id}">
+      <img src="/static/images/${r.id}.jpg" alt="${r.nombre}" class="card-photo"
+           onclick="openModal('${r.id}')"
+           onerror="this.outerHTML='<div class=\\'card-photo-placeholder\\' onclick=\\'openModal(\\'${r.id}\\')\\' >${r.emoji}</div>'">
+      <div class="card-body">
+        <div class="tags">${r.tags.map((t) => `<span class="tag ${tagClass(t)}">${t}</span>`).join("")}</div>
+        <div class="card-title">${r.nombre}</div>
+        <div class="card-subtitle">${r.subtitulo}</div>
+        <div class="card-meta">
+          <span>⏱ ${r.tiempo_total} min</span>
+          <span>🔥 ${r.calorias} kcal</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-grey" onclick="openModal('${r.id}')">Ver receta</button>
+          <button class="btn ${selected.has(r.id) ? "btn-red" : "btn-green"}" onclick="toggleSelect('${r.id}')">
+            ${selected.has(r.id) ? "✓ Quitar" : "+ Semana"}
+          </button>
+        </div>
+      </div>
+    </div>
+  `,
+            )
+            .join("");
+      }
+
+      function toggleSelect(id) {
+        if (selected.has(id)) {
+          selected.delete(id);
+          toast("Receta eliminada de la semana");
+        } else {
+          selected.add(id);
+          toast("¡Añadida a la semana!", true);
+        }
+        localStorage.setItem("hf_selected", JSON.stringify([...selected]));
+        updateBadge();
+        renderGrid();
+        if (document.getElementById("view-semana").style.display !== "none")
+          renderWeek();
+      }
+
+      function updateBadge() {
+        const b = document.getElementById("week-badge");
+        b.textContent = selected.size;
+        b.style.display = selected.size ? "inline" : "none";
+      }
+
+      // ── Week View ──
+      function renderWeek() {
+        const list = document.getElementById("week-list");
+        const btn = document.getElementById("gen-btn");
+        if (!selected.size) {
+          list.innerHTML = `<div class="empty-state"><div class="big-emoji">📅</div><p>No has seleccionado ninguna receta todavía.<br>Ve a "Recetas" y añade las que quieres cocinar esta semana.</p></div>`;
+          btn.style.display = "none";
+          return;
+        }
+        list.innerHTML = recipes
+          .filter((r) => selected.has(r.id))
+          .map(
+            (r) => `
+    <div class="selected-item">
+      <img src="/static/images/${r.id}.jpg" alt="" class="item-photo"
+           onerror="this.outerHTML='<div class=\\'item-photo-placeholder\\'>${r.emoji}</div>'">
+      <div class="item-body">
+        <div class="item-info">
+          <h4>${r.nombre}</h4>
+          <p>${r.tiempo_total} min · ${r.calorias} kcal/persona</p>
+        </div>
+        <div class="item-actions">
+          <a href="/pdfs/${r.pdf_file}" target="_blank" class="btn btn-grey">📄 Ver PDF</a>
+          <button class="btn btn-red" onclick="toggleSelect('${r.id}')">Quitar</button>
+        </div>
+      </div>
+    </div>
+  `,
+          )
+          .join("");
+        btn.style.display = "flex";
+      }
+
+      function updatePersons() {
+        persons = parseInt(document.getElementById("persons-select").value);
+        localStorage.setItem("hf_persons", persons);
+      }
+
+      async function generateList() {
+        const btn = document.getElementById("gen-btn");
+        btn.textContent = "⏳ Generando...";
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/shopping-list", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ recipe_ids: [...selected], persons }),
+          });
+          const data = await res.json();
+          shoppingSections = data.sections;
+          renderShopping();
+          showView("compra");
+          toast("¡Lista generada!", true);
+        } catch (e) {
+          toast("Error al conectar con el servidor");
+        }
+        btn.textContent = "🛒 Generar lista de la compra";
+        btn.disabled = false;
+      }
+
+      // ── Shopping ──
+      function renderShopping() {
+        const el = document.getElementById("shop-content");
+        const finalBtn = document.getElementById("final-list-btn");
+        if (!shoppingSections.length) {
+          el.innerHTML =
+            '<div class="empty-state"><div class="big-emoji">🛒</div><p>No hay ingredientes</p></div>';
+          if (finalBtn) finalBtn.style.display = "none";
+          return;
+        }
+        if (finalBtn) finalBtn.style.display = "inline-flex";
+        const checked = new Set(
+          JSON.parse(localStorage.getItem("hf_checked") || "[]"),
+        );
+        const totalItems = shoppingSections.reduce(
+          (n, s) => n + s.items.length,
+          0,
+        );
+
+        el.innerHTML = `
+    <div class="shopping-meta">${totalItems} ingredientes para ${persons} personas</div>
+    ${shoppingSections
+      .map(
+        (sec) => `
+      <div class="recipe-section">
+        <div class="recipe-section-header">
+          <span class="sec-emoji">${sec.recipe_emoji}</span>
+          <h3>${sec.recipe_nombre}</h3>
+        </div>
+        ${
+          sec.items.length === 0
+            ? `<p style="color:#bbb;font-size:0.85rem;padding:8px 0">Todos los ingredientes están en tu despensa</p>`
+            : `<div class="shopping-items">
+              ${sec.items
+                .map((item) => {
+                  const key = (sec.recipe_id + "_" + item.nombre)
+                    .toLowerCase()
+                    .replace(/\s+/g, "_");
+                  const isChecked = checked.has(key);
+                  return `<div class="shop-item ${isChecked ? "checked" : ""}" id="si-${key}">
+                  <input type="checkbox" ${isChecked ? "checked" : ""} onchange="toggleCheck('${key}',this)">
+                  <span class="s-name">${item.nombre}</span>
+                  <span class="s-qty">${item.cantidad}</span>
+                  ${item.refrigerar ? '<span class="s-cold">❄️</span>' : ""}
+                </div>`;
+                })
+                .join("")}
+            </div>`
+        }
+      </div>
+    `,
+      )
+      .join("")}
+  `;
+      }
+
+      function toggleCheck(key, cb) {
+        const checked = new Set(
+          JSON.parse(localStorage.getItem("hf_checked") || "[]"),
+        );
+        const el = document.getElementById("si-" + key);
+        if (cb.checked) {
+          checked.add(key);
+          el.classList.add("checked");
+        } else {
+          checked.delete(key);
+          el.classList.remove("checked");
+        }
+        localStorage.setItem("hf_checked", JSON.stringify([...checked]));
+      }
+
+      function uncheckAll() {
+        localStorage.removeItem("hf_checked");
+        if (shoppingSections.length) renderShopping();
+      }
+
+      function openMercadona() {
+        window.open("https://tienda.mercadona.es", "_blank");
+      }
+
+      // ── Pantry (Ajustes) ──
+      async function loadPantry() {
+        const list = document.getElementById("pantry-list");
+        try {
+          const res = await fetch("/api/pantry");
+          const items = await res.json();
+          renderPantry(items);
+        } catch (e) {
+          list.innerHTML =
+            '<div style="color:#c62828;font-size:0.9rem">Error al cargar la despensa</div>';
+        }
+      }
+
+      function renderPantry(items) {
+        const list = document.getElementById("pantry-list");
+        if (!items.length) {
+          list.innerHTML =
+            '<div style="color:#bbb;font-size:0.9rem;text-align:center;padding:20px">No hay ingredientes en la despensa</div>';
+          return;
+        }
+        list.innerHTML = items
+          .map(
+            (item) => `
+    <div class="pantry-item">
+      <span class="p-name">${item}</span>
+      <button class="pantry-del" onclick="deletePantry('${item.replace(/'/g, "\\'")}')">✕</button>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      function pantryKey(e) {
+        if (e.key === "Enter") addPantry();
+      }
+
+      async function addPantry() {
+        const input = document.getElementById("pantry-input");
+        const val = input.value.trim();
+        if (!val) return;
+        input.value = "";
+        try {
+          const res = await fetch("/api/pantry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ item: val }),
+          });
+          const items = await res.json();
+          renderPantry(items);
+          toast(`"${val}" añadido a la despensa`, true);
+        } catch (e) {
+          toast("Error al añadir el ingrediente");
+        }
+      }
+
+      async function deletePantry(item) {
+        try {
+          const res = await fetch(`/api/pantry/${encodeURIComponent(item)}`, {
+            method: "DELETE",
+          });
+          const items = await res.json();
+          renderPantry(items);
+          toast(`"${item}" eliminado de la despensa`);
+        } catch (e) {
+          toast("Error al eliminar el ingrediente");
+        }
+      }
+
+      // ── Modal ──
+      function fmtQty(qty, unit) {
+        if (qty === 0.5) return `½ ${unit}`;
+        if (qty === 1.5) return `1½ ${unit}`;
+        if (qty === Math.floor(qty)) return `${qty} ${unit}`;
+        return `${qty} ${unit}`;
+      }
+
+      function openModal(id) {
+        const r = recipes.find((x) => x.id === id);
+        if (!r) return;
+        currentRecipe = r;
+
+        // Hero — image with text overlay
+        const hero = document.getElementById("modal-hero");
+        hero.innerHTML = `
+    <button class="close-btn" onclick="closeModal()">✕</button>
+    <img src="/static/images/${r.id}.jpg" alt="${r.nombre}"
+         onerror="this.outerHTML='<div class=\\'hero-placeholder\\'>${r.emoji}</div>'">
+    <div class="hero-overlay">
+      <h2 id="m-title">${r.nombre}</h2>
+      <div class="m-sub">${r.subtitulo}</div>
+    </div>
+  `;
+
+        document.getElementById("m-meta").innerHTML = `
+    <div class="m-meta">
+      <span>⏱ ${r.tiempo_cocina} min cocinando</span>
+      <span>🕐 ${r.tiempo_total} min total</span>
+      <span>🔥 ${r.calorias} kcal/pers</span>
+    </div>
+    <div class="tags" style="margin-top:6px">${r.tags.map((t) => `<span class="tag ${tagClass(t)}">${t}</span>`).join("")}</div>
+  `;
+
+        document.getElementById("m-ingredients").innerHTML = r.ingredientes
+          .map(
+            (ing) =>
+              `<div class="ing-row"><span>${ing.nombre}${ing.refrigerar ? " ❄️" : ""}</span><span class="ing-qty">${fmtQty(ing.cantidad, ing.unidad)}</span></div>`,
+          )
+          .join("");
+
+        document.getElementById("m-pantry").textContent = r.despensa.join(", ");
+
+        document.getElementById("m-steps").innerHTML = r.pasos
+          .map(
+            (p) =>
+              `<div class="step"><div class="step-num">${p.num}</div><div class="step-content"><h4>${p.titulo}</h4><p>${p.descripcion}</p></div></div>`,
+          )
+          .join("");
+
+        document.getElementById("m-tools").textContent =
+          r.utensilios.join(", ");
+
+        const btn = document.getElementById("m-add-btn");
+        const inWeek = selected.has(r.id);
+        btn.textContent = inWeek
+          ? "✓ Quitar de la semana"
+          : "+ Añadir a la semana";
+        btn.className = `btn ${inWeek ? "btn-red" : "btn-green"}`;
+
+        document.getElementById("overlay").classList.add("open");
+      }
+
+      function modalToggleWeek() {
+        if (!currentRecipe) return;
+        toggleSelect(currentRecipe.id);
+        const inWeek = selected.has(currentRecipe.id);
+        const btn = document.getElementById("m-add-btn");
+        btn.textContent = inWeek
+          ? "✓ Quitar de la semana"
+          : "+ Añadir a la semana";
+        btn.className = `btn ${inWeek ? "btn-red" : "btn-green"}`;
+      }
+
+      function closeModal() {
+        document.getElementById("overlay").classList.remove("open");
+      }
+      function overlayClick(e) {
+        if (e.target === document.getElementById("overlay")) closeModal();
+      }
+
+      // ── Final List ──
+      function openFinalList() {
+        const checked = new Set(
+          JSON.parse(localStorage.getItem("hf_checked") || "[]"),
+        );
+        const lines = [];
+
+        for (const sec of shoppingSections) {
+          const unchecked = sec.items.filter((item) => {
+            const key = (sec.recipe_id + "_" + item.nombre)
+              .toLowerCase()
+              .replace(/\s+/g, "_");
+            return !checked.has(key);
+          });
+          if (unchecked.length === 0) continue;
+          lines.push(`${sec.recipe_emoji} ${sec.recipe_nombre}`);
+          for (const item of unchecked) {
+            lines.push(
+              `  • ${item.nombre} — ${item.cantidad}${item.refrigerar ? " ❄️" : ""}`,
+            );
+          }
+          lines.push("");
+        }
+
+        if (lines.length === 0) {
+          toast("¡No quedan ingredientes pendientes!", true);
+          return;
+        }
+
+        document.getElementById("final-list-text").value = lines
+          .join("\n")
+          .trim();
+        document.getElementById("final-overlay").classList.add("open");
+      }
+
+      function closeFinalList() {
+        document.getElementById("final-overlay").classList.remove("open");
+      }
+
+      function finalOverlayClick(e) {
+        if (e.target === document.getElementById("final-overlay"))
+          closeFinalList();
+      }
+
+      function copyListText() {
+        const text = document.getElementById("final-list-text").value;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard
+            .writeText(text)
+            .then(() => toast("¡Lista copiada al portapapeles!", true))
+            .catch(() => fallbackCopy());
+        } else {
+          fallbackCopy();
+        }
+      }
+
+      function fallbackCopy() {
+        const ta = document.getElementById("final-list-text");
+        ta.select();
+        ta.setSelectionRange(0, 99999);
+        try {
+          document.execCommand("copy");
+          toast("¡Lista copiada!", true);
+        } catch (e) {
+          toast("Selecciona el texto y cópialo manualmente");
+        }
+      }
+
+      // ── Toast ──
+      function toast(msg, ok) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.className = `toast show${ok ? " ok" : ""}`;
+        setTimeout(() => (el.className = "toast"), 2600);
+      }
+    </script>
+  </body>
+</html>
